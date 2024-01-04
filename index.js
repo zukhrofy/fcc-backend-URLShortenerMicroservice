@@ -14,23 +14,23 @@ app.use("/public", express.static(`${process.cwd()}/public`));
 app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 
-let urlSchema = new Schema({
+const urlSchema = new Schema({
   original_url: { type: String, required: true },
   short_url: { type: Number, required: true },
 });
 
-let Urls = mongoose.model("Urls", urlSchema);
+const Urls = mongoose.model("Urls", urlSchema);
 
-app.get("/", function (req, res) {
+app.get("/", (req, res) => {
   res.sendFile(process.cwd() + "/views/index.html");
 });
 
 // Your first API endpoint
-app.get("/api/hello", function (req, res) {
+app.get("/api/hello", (req, res) => {
   res.json({ greeting: "hello API" });
 });
 
-app.get("/api/shorturl/:short_url", async function (req, res) {
+app.get("/api/shorturl/:short_url", async (req, res) => {
   const urlParam = req.params.short_url;
   try {
     const url = await Urls.findOne({ short_url: urlParam });
@@ -45,13 +45,14 @@ app.get("/api/shorturl/:short_url", async function (req, res) {
   }
 });
 
-app.post("/api/shorturl", async function (req, res) {
+app.post("/api/shorturl", async (req, res) => {
   const urlString = req.body.url;
   // check if valid url
   try {
     const parsedUrl = new URL(urlString);
     // check if url already in database
     const url = await Urls.findOne({ original_url: urlString });
+    // if url already in database
     if (url)
       return res.json({
         original_url: url.original_url,
@@ -70,10 +71,7 @@ app.post("/api/shorturl", async function (req, res) {
           original_url: urlString,
           short_url: totalDocument + 1,
         });
-        return res.json({
-          original_url: newUrl.original_url,
-          short_url: newUrl.short_url,
-        });
+        return res.json(newUrl);
       }
     });
   } catch (e) {
@@ -86,10 +84,6 @@ app.post("/api/shorturl", async function (req, res) {
 mongoose
   .connect(
     "mongodb+srv://abbarzukhrofy:mamasasa@zukhrofy.xvvdwqj.mongodb.net/URL-Shortener-Microservice",
-    {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
-    },
   )
   .then(() => {
     // listen for requests
